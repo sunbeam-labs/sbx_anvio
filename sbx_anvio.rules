@@ -1,0 +1,73 @@
+# -*- mode: Snakemake -*-
+#
+# Binning-without-mapping-for-completeness
+# 
+# Requires anvio=4
+
+rule all_anvio_scg:
+    input:
+        expand(str(ASSEMBLY_FP/'anvio'/'{sample}'/'.savepdf'),
+	       sample=Samples.keys())
+
+rule simply_names:
+    input:
+        str(ASSEMBLY_FP/'contigs'/'{sample}-contigs.fa')
+    output:
+        str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.fa')
+    params:
+        str(ASSEMBLY_FP/'anvio'/'{sample}'/'simplify-names.txt')
+    shell:
+        """
+        anvi-script-reformat-fasta {input} -o {output} -l 2000 \
+	  --simplify-name --report-file {params}
+        """
+
+rule gen_contigs_db:
+    input:
+        str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.fa')
+    output:
+        str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.db')
+    params:
+        sample="{sample}"
+    shell:
+        """
+        anvi-gen-contigs-database -f {input} -o {output} -n {params.sample} \
+	  -L 2000 --skip-mindful-splitting
+        """
+
+rule run_hmm:
+    input:
+        str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.db')
+    output:
+        str(ASSEMBLY_FP/'anvio'/'{sample}'/'.DONEhmm')
+    threads:
+        Cfg['assembly']['threads']
+    shell:
+        """
+        anvi-run-hmms -c {input} --num-threads {threads} && \
+        touch {output}
+        """
+
+rule gen_stats_for_single_copy_genes:
+    input:
+        contigdb = str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.db'),
+        sentinel = str(ASSEMBLY_FP/'anvio'/'{sample}'/'.DONEhmm')
+    output:
+        hits = str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.db.hits'),
+        genes = str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.db.genes')
+    shell:
+        """
+        anvi-script-gen_stats_for_single_copy_genes.py {input.contigdb}
+        """
+
+rule get_stats_pdf:
+    input:
+        hits = str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.db.hits'),
+        genes = str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.db.genes')
+    output:
+        sentinel = str(ASSEMBLY_FP/'anvio'/'{sample}'/'.savepdf')
+    shell:
+        """
+        anvi-script-gen_stats_for_single_copy_genes.R {input.hits} {input.genes} \
+		&& touch {output.sentinel}
+        """
