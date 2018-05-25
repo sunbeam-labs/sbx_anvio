@@ -60,6 +60,7 @@ rule gen_stats_for_single_copy_genes:
         anvi-script-gen_stats_for_single_copy_genes.py {input.contigdb}
         """
 
+## TODO: replace R script with `anvi-display-contigs-stats`
 rule get_stats_pdf:
     input:
         hits = str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.db.hits'),
