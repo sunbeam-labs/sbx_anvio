@@ -16,6 +16,8 @@ rule simply_names:
         str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.fa')
     params:
         str(ASSEMBLY_FP/'anvio'/'{sample}'/'simplify-names.txt')
+    conda:
+        "sbx_anvio_env.yml"
     shell:
         """
         anvi-script-reformat-fasta {input} -o {output} -l 2000 \
@@ -29,6 +31,8 @@ rule gen_contigs_db:
         str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.db')
     params:
         sample="{sample}"
+    conda:
+        "sbx_anvio_env.yml"
     shell:
         """
         anvi-gen-contigs-database -f {input} -o {output} -n {params.sample} \
@@ -42,6 +46,8 @@ rule run_hmm:
         str(ASSEMBLY_FP/'anvio'/'{sample}'/'.DONEhmm')
     threads:
         Cfg['assembly']['threads']
+    conda:
+        "sbx_anvio_env.yml"
     shell:
         """
         anvi-run-hmms -c {input} --num-threads {threads} && \
@@ -55,6 +61,8 @@ rule gen_stats_for_single_copy_genes:
     output:
         hits = str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.db.hits'),
         genes = str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.db.genes')
+    conda:
+        "sbx_anvio_env.yml"
     shell:
         """
         anvi-script-gen_stats_for_single_copy_genes.py {input.contigdb}
@@ -67,6 +75,8 @@ rule get_stats_pdf:
         genes = str(ASSEMBLY_FP/'anvio'/'{sample}'/'contigs.db.genes')
     output:
         sentinel = str(ASSEMBLY_FP/'anvio'/'{sample}'/'.savepdf')
+    conda:
+        "sbx_anvio_env.yml"
     shell:
         """
         anvi-script-gen_stats_for_single_copy_genes.R {input.hits} {input.genes} \

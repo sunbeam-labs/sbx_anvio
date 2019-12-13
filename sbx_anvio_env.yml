@@ -1,0 +1,11 @@
+channels:
+  - bioconda
+  - conda-forge
+  - r
+dependencies:
+  - anvio=4
+  - hmmer=3.1
+  - r-gtools
+  - r-gridextra
+  - r-ggplot2
+  - r-optparse
